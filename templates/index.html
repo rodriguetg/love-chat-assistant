@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harmony - Love Coach</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Quicksand', sans-serif;
+        }
+
+        :root {
+            --bg-gradient: linear-gradient(135deg, #FF69B4, #FF1493);
+            --chat-bg: #FFF0F5;
+            --message-bot: #fff;
+            --message-user: #FF69B4;
+            --input-bg: #fff;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            min-height: 100vh;
+            background: var(--chat-bg);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-container {
+            max-width: 1000px;
+            margin: 20px auto;
+            width: 95%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 40px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #FF69B4, #FF1493);
+            padding: 20px;
+            color: white;
+            text-align: center;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            overflow: hidden;
+        }
+
+        .chat-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, 
+                rgba(255,255,255,0.1) 0%,
+                rgba(255,255,255,0.2) 50%,
+                rgba(255,255,255,0.1) 100%);
+            animation: headerShine 3s linear infinite;
+            background-size: 200% 200%;
+        }
+
+        @keyframes headerShine {
+            0% {
+                background-position: 0% 0%;
+            }
+            100% {
+                background-position: 200% 200%;
+            }
+        }
+
+        .chat-header h1 {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(
+                90deg,
+                #ffffff 0%,
+                #ffd700 25%,
+                #ff69b4 50%,
+                #ffd700 75%,
+                #ffffff 100%
+            );
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: titleGradient 6s linear infinite, titleFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes titleGradient {
+            0% {
+                background-position: 0% center;
+            }
+            100% {
+                background-position: -200% center;
+            }
+        }
+
+        @keyframes titleFloat {
+            0%, 100% {
+                transform: translateY(0) scale(1);
+            }
+            50% {
+                transform: translateY(-5px) scale(1.02);
+            }
+        }
+
+        .chat-logo {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid white;
+            position: absolute;
+            right: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            animation: logoFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes logoFloat {
+            0% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-10px) rotate(5deg);
+            }
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: var(--chat-bg);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            position: relative;
+            font-size: 1em;
+            line-height: 1.5;
+            box-shadow: var(--shadow);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .user-message {
+            background: var(--message-user);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+
+        .bot-message {
+            background: var(--message-bot);
+            color: var(--text-primary);
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+        }
+
+        .input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+            background: var(--input-bg);
+            border-radius: 15px;
+            padding: 5px;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        .message-input {
+            flex: 1;
+            border: none;
+            padding: 15px;
+            font-size: 1em;
+            background: transparent;
+            color: var(--text-primary);
+        }
+
+        .message-input:focus {
+            outline: none;
+        }
+
+        .message-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .send-button {
+            background: var(--bg-gradient);
+            color: white;
+            border: none;
+            padding: 0 25px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s;
+        }
+
+        .send-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .send-button i {
+            font-size: 1.2em;
+        }
+
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 10px 15px;
+            background: var(--message-bot);
+            border-radius: 15px;
+            margin-bottom: 10px;
+            box-shadow: var(--shadow);
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--message-user);
+            border-radius: 50%;
+            animation: bounce 1.3s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-4px); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--message-user);
+            border-radius: 3px;
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                margin: 0;
+                width: 100%;
+                height: 100vh;
+                border-radius: 0;
+            }
+
+            .chat-header {
+                border-radius: 0;
+            }
+
+            .message {
+                max-width: 90%;
+            }
+        }
+
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+            padding: 0 10px;
+        }
+
+        .suggestion-chip {
+            background: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            color: var(--text-primary);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
+        }
+
+        .suggestion-chip:hover {
+            background: var(--message-user);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .love-particles {
+            position: absolute;
+            pointer-events: none;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            animation: float 6s ease-in infinite;
+            opacity: 0;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100%) scale(0);
+                opacity: 0;
+            }
+            50% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-100vh) scale(1);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="love-particles" id="particles"></div>
+        <div class="chat-header">
+            <h1>Harmony - Love Coach</h1>
+            <img src="/static/images/logo.jpeg" alt="Harmony Logo" class="chat-logo">
+        </div>
+        
+        <div class="chat-messages" id="chat-messages"></div>
+        
+        <div class="input-container">
+            <div class="input-wrapper">
+                <input type="text" 
+                       class="message-input" 
+                       id="user-input" 
+                       placeholder="Posez votre question à Harmony..."
+                       autocomplete="off">
+                <button class="send-button" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            <div class="suggestions">
+                <div class="suggestion-chip" onclick="usesuggestion('Comment trouver l\'amour ?')">💕 Trouver l'amour</div>
+                <div class="suggestion-chip" onclick="usesuggestion('Comment gérer une rupture ?')">💔 Gérer une rupture</div>
+                <div class="suggestion-chip" onclick="usesuggestion('Conseils pour le premier rendez-vous')">✨ Premier rendez-vous</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const messagesDiv = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const particles = document.getElementById('particles');
+
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.innerHTML = ['💖', '💕', '💗', '💓', '💝'][Math.floor(Math.random() * 5)];
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.fontSize = (Math.random() * 20 + 10) + 'px';
+            particle.style.animationDuration = (Math.random() * 3 + 4) + 's';
+            particles.appendChild(particle);
+            
+            setTimeout(() => particle.remove(), 6000);
+        }
+
+        setInterval(createParticle, 2000);
+
+        function addMessage(message, isUser) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            
+            if (!isUser) {
+                // Formater le message du bot
+                let formattedMessage = message;
+                
+                // Ajouter des retours à la ligne après les salutations
+                formattedMessage = formattedMessage.replace(/(Cher ami\/amie,|Bonjour,|Salut,)/, '$1<br><br>');
+                
+                // Ajouter des retours à la ligne pour les points numérotés (au début de la ligne)
+                formattedMessage = formattedMessage.replace(/(\d+)\. /g, '<br><br>$1. ');
+                
+                // Ajouter des retours à la ligne après chaque phrase (sauf celles qui se terminent par un numéro)
+                formattedMessage = formattedMessage.replace(/\.(?!\d)(?!\s*<br>)\s+/g, '.<br><br>');
+                
+                // Ajouter des retours à la ligne pour les tirets
+                formattedMessage = formattedMessage.replace(/- /g, '<br>- ');
+                
+                // Ajouter des retours à la ligne avant la conclusion
+                formattedMessage = formattedMessage.replace(/(J'espère|En espérant|Pour conclure|Enfin)/g, '<br><br>$1');
+                
+                // Nettoyer les retours à la ligne multiples
+                formattedMessage = formattedMessage.replace(/<br><br>\s*<br><br>/g, '<br><br>');
+                
+                // S'assurer que les points numérotés sont bien au début
+                formattedMessage = formattedMessage.replace(/<br><br>(\d+\. )/g, '<br><br>$1');
+                
+                messageDiv.innerHTML = formattedMessage;
+            } else {
+                messageDiv.textContent = message;
+            }
+            
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            if (!isUser) {
+                createParticle();
+                createParticle();
+            }
+        }
+
+        function showTypingIndicator() {
+            const indicator = document.createElement('div');
+            indicator.className = 'typing-indicator';
+            indicator.innerHTML = `
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            `;
+            messagesDiv.appendChild(indicator);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            return indicator;
+        }
+
+        function usesuggestion(text) {
+            userInput.value = text;
+            sendMessage();
+        }
+
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (message) {
+                addMessage(message, true);
+                const indicator = showTypingIndicator();
+                socket.emit('send_message', { message: message });
+                userInput.value = '';
+                
+                socket.once('bot_response', () => {
+                    indicator.remove();
+                });
+            }
+        }
+
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        socket.on('bot_response', function(data) {
+            addMessage(data.message, false);
+        });
+
+        setTimeout(() => {
+            addMessage("Bonjour ! Je suis Harmony, la chouchou de Rodrigue, votre conseillère en relations amoureuses. Comment puis-je vous aider aujourd'hui ? ✨", false);
+        }, 500);
+    </script>
+</body>
+</html>

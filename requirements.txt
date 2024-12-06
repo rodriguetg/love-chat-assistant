@@ -1,0 +1,13 @@
+Flask==2.3.3
+Flask-SQLAlchemy==3.1.1
+python-dotenv==1.0.0
+requests==2.31.0
+Werkzeug==2.3.7
+torch==2.2.1
+nltk==3.8.1
+textblob==0.17.1
+Flask-Babel==3.1.0
+gTTS==2.3.2
+SpeechRecognition==3.10.0
+emoji==2.8.0
+Flask-SocketIO==5.3.5
