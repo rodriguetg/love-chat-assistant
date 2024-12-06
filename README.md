@@ -1,4 +1,4 @@
-# Chatbot Coach Amoureux - Harmony
+# Chatbot Coach Amoureux - Armony
 
 Un chatbot intelligent spécialisé dans les conseils en relations amoureuses, développé avec Flask et SQLite.
 
@@ -12,7 +12,7 @@ Projet réalisé dans le cadre du Master Brand Content et Management à PEM (Par
 - **Aurélien YOMI**
 
 ## Présentation du projet
-Harmony est un assistant virtuel innovant qui utilise l'intelligence artificielle pour offrir des conseils personnalisés en matière de relations amoureuses. Notre objectif est de combiner technologie moderne et psychologie relationnelle pour aider les gens à mieux comprendre et gérer leurs relations.
+Armony est un assistant virtuel innovant qui utilise l'intelligence artificielle pour offrir des conseils personnalisés en matière de relations amoureuses. Notre objectif est de combiner technologie moderne et psychologie relationnelle pour aider les gens à mieux comprendre et gérer leurs relations.
 
 ## Fonctionnalités actuelles
 

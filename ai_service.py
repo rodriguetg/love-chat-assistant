@@ -8,7 +8,7 @@ class AIService:
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
             "HTTP-Referer": "http://localhost:5000",
-            "X-Title": "Harmony Love Coach"
+            "X-Title": "Armony Love Coach"
         }
 
     def get_completion(self, user_message, conversation_history=None):
@@ -16,7 +16,7 @@ class AIService:
             conversation_history = []
 
         messages = [
-            {"role": "system", "content": """Je suis Harmony, un assistant virtuel créé par une équipe d'étudiants en Master Brand Content et Management à PEM (Paris École de Management).
+            {"role": "system", "content": """Je suis Armony, un assistant virtuel créé par une équipe d'étudiants en Master Brand Content et Management à PEM (Paris École de Management).
 
 Notre équipe est composée de :
 • Rodrigue GBADOU
