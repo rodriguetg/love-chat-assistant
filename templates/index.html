@@ -375,9 +375,9 @@
                 </button>
             </div>
             <div class="suggestions">
-                <div class="suggestion-chip" onclick="usesuggestion('Comment trouver l\'amour ?')">💕 Trouver l'amour</div>
-                <div class="suggestion-chip" onclick="usesuggestion('Comment gérer une rupture ?')">💔 Gérer une rupture</div>
-                <div class="suggestion-chip" onclick="usesuggestion('Conseils pour le premier rendez-vous')">✨ Premier rendez-vous</div>
+                <div class="suggestion-chip" onclick="usesuggestion('Comment trouver l\'amour ?')"> Comment trouver l'amour ?</div>
+                <div class="suggestion-chip" onclick="usesuggestion('Comment gérer une rupture ?')"> Comment gérer une rupture ?</div>
+                <div class="suggestion-chip" onclick="usesuggestion('Conseils pour le premier rendez-vous')"> Conseils pour le premier rendez-vous</div>
             </div>
         </div>
     </div>
@@ -391,7 +391,7 @@
         function createParticle() {
             const particle = document.createElement('div');
             particle.className = 'particle';
-            particle.innerHTML = ['💖', '💕', '💗', '💓', '💝'][Math.floor(Math.random() * 5)];
+            particle.innerHTML = [' ', ' ', ' ', ' ', ' '][Math.floor(Math.random() * 5)];
             particle.style.left = Math.random() * 100 + '%';
             particle.style.fontSize = (Math.random() * 20 + 10) + 'px';
             particle.style.animationDuration = (Math.random() * 3 + 4) + 's';
@@ -488,7 +488,7 @@
         });
 
         setTimeout(() => {
-            addMessage("Bonjour ! Je suis Armony, la chouchou de Rodrigue, votre conseillère en relations amoureuses. Comment puis-je vous aider aujourd'hui ? ✨", false);
+            addMessage("Bonjour ! Je suis Armony, la chouchou de Rodrigue, votre conseillère en relations amoureuses. Comment puis-je vous aider aujourd'hui ? ", false);
         }, 500);
     </script>
 </body>
