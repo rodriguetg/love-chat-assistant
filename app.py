@@ -1,8 +1,13 @@
+from gevent import monkey
+monkey.patch_all()
+
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 from ai_service import AIService
+import os
 
 app = Flask(__name__)
+port = int(os.environ.get("PORT", 10000))
 socketio = SocketIO(app, cors_allowed_origins="*")
 ai_service = AIService()
 
@@ -38,4 +43,4 @@ def handle_message(data):
         })
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    socketio.run(app, port=port, debug=True)
