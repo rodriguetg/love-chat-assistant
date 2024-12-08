@@ -351,6 +351,21 @@
                 opacity: 0;
             }
         }
+
+        .system-message {
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+            margin: 8px 0;
+            padding: 4px;
+            background-color: rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -383,10 +398,113 @@
     </div>
 
     <script>
-        const socket = io();
-        const messagesDiv = document.getElementById('chat-messages');
-        const userInput = document.getElementById('user-input');
-        const particles = document.getElementById('particles');
+        const messagesDiv = document.querySelector('.chat-messages');
+        const userInput = document.querySelector('#user-input');
+        
+        // Configuration améliorée de Socket.IO avec gestion de la mise en veille
+        const socket = io({
+            reconnection: true,
+            reconnectionAttempts: Infinity,  // Tentatives infinies de reconnexion
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 10000,
+            timeout: 60000,
+            autoConnect: true,
+            transports: ['websocket'],
+            pingTimeout: 120000,
+            pingInterval: 30000
+        });
+
+        let isReconnecting = false;
+        let reconnectionTimer = null;
+
+        // Fonction pour vérifier la connexion
+        function checkConnection() {
+            if (!socket.connected && !isReconnecting) {
+                isReconnecting = true;
+                addSystemMessage('Tentative de reconnexion au serveur...');
+                socket.connect();
+            }
+        }
+
+        // Vérifier la connexion toutes les 30 secondes
+        setInterval(checkConnection, 30000);
+
+        // Ping le serveur toutes les 25 secondes pour maintenir la connexion
+        setInterval(() => {
+            if (socket.connected) {
+                socket.emit('ping');
+            }
+        }, 25000);
+
+        socket.on('pong', () => {
+            console.log('Pong reçu du serveur');
+        });
+
+        socket.on('connect', () => {
+            console.log('Connecté au serveur');
+            isReconnecting = false;
+            if (reconnectionTimer) {
+                clearTimeout(reconnectionTimer);
+                reconnectionTimer = null;
+            }
+            addSystemMessage('Connexion établie');
+        });
+
+        socket.on('disconnect', (reason) => {
+            console.log('Déconnecté du serveur:', reason);
+            addSystemMessage('Connexion perdue. Tentative de reconnexion...');
+            
+            // Si la déconnexion est due à la mise en veille, on attend plus longtemps
+            if (reason === 'transport close' || reason === 'ping timeout') {
+                reconnectionTimer = setTimeout(() => {
+                    addSystemMessage('Le serveur semble en veille. La première réponse peut prendre jusqu\'à 50 secondes.');
+                }, 5000);
+            }
+        });
+
+        socket.on('error', (error) => {
+            console.error('Erreur Socket.IO:', error);
+            addSystemMessage('Erreur de connexion');
+        });
+
+        socket.on('connect_error', (error) => {
+            console.error('Erreur de connexion:', error);
+            if (!isReconnecting) {
+                addSystemMessage('Erreur de connexion. Nouvelle tentative...');
+            }
+        });
+
+        socket.on('reconnect', (attemptNumber) => {
+            console.log('Reconnecté après', attemptNumber, 'tentatives');
+            isReconnecting = false;
+            addSystemMessage('Reconnexion réussie !');
+        });
+
+        socket.on('reconnect_error', (error) => {
+            console.error('Erreur de reconnexion:', error);
+            addSystemMessage('Échec de la reconnexion');
+        });
+
+        socket.on('reconnect_required', (data) => {
+            console.log('Reconnexion requise:', data);
+            socket.disconnect();
+            setTimeout(() => {
+                socket.connect();
+            }, 1000);
+        });
+
+        function addSystemMessage(message) {
+            const systemMessage = document.createElement('div');
+            systemMessage.className = 'message system-message';
+            systemMessage.textContent = message;
+            messagesDiv.appendChild(systemMessage);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            
+            // Supprimer le message système après 8 secondes
+            setTimeout(() => {
+                systemMessage.remove();
+            }, 8000);
+        }
 
         function createParticle() {
             const particle = document.createElement('div');
@@ -465,15 +583,33 @@
 
         function sendMessage() {
             const message = userInput.value.trim();
-            if (message) {
+            if (message && socket.connected) {
                 addMessage(message, true);
                 const indicator = showTypingIndicator();
-                socket.emit('send_message', { message: message });
+                
+                // Ajouter un timeout pour la réponse
+                const timeoutId = setTimeout(() => {
+                    indicator.remove();
+                    addSystemMessage('Le serveur met trop de temps à répondre');
+                }, 30000);
+
+                socket.emit('send_message', { message: message }, (error) => {
+                    if (error) {
+                        console.error('Erreur d\'envoi:', error);
+                        indicator.remove();
+                        addSystemMessage('Erreur d\'envoi du message');
+                        clearTimeout(timeoutId);
+                    }
+                });
+
                 userInput.value = '';
                 
                 socket.once('bot_response', () => {
                     indicator.remove();
+                    clearTimeout(timeoutId);
                 });
+            } else if (!socket.connected) {
+                addSystemMessage('Impossible d\'envoyer le message : non connecté');
             }
         }
 
