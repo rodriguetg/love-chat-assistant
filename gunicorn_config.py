@@ -15,6 +15,10 @@ timeout = 120
 keepalive = 5
 graceful_timeout = 30
 
+# Redémarrage automatique
+max_requests = 1000
+max_requests_jitter = 50
+
 # Logging
 accesslog = "-"
 errorlog = "-"
@@ -40,14 +44,29 @@ secure_scheme_headers = {
     'X-FORWARDED-SSL': 'on'
 }
 
-# Performance tuning
-max_requests = 1000
-max_requests_jitter = 50
-backlog = 2048
-threads = 1
+# Configurations de sécurité
+limit_request_line = 4096
+limit_request_fields = 100
+limit_request_field_size = 8190
+
+# Configuration SSL (si nécessaire)
+# keyfile = 'path/to/keyfile'
+# certfile = 'path/to/certfile'
+
+# Configuration des en-têtes
+forwarded_allow_ips = '*'
+proxy_protocol = True
+proxy_allow_ips = '*'
+
+# Configuration des statuts
+statsd_host = None
 
 # Debugging
-reload = False
+reload = True
 reload_engine = 'auto'
 spew = False
 check_config = False
+
+# Performance tuning
+backlog = 2048
+threads = 1
