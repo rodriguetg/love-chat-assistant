@@ -20,10 +20,12 @@ const ChatContainer = () => {
   }, [messages])
 
   useEffect(() => {
+    const aiProvider = (import.meta.env.VITE_AI_PROVIDER || 'huggingface').charAt(0).toUpperCase() + (import.meta.env.VITE_AI_PROVIDER || 'huggingface').slice(1);
+    
     // Message d'accueil initial
     const welcomeMessage = {
       id: 1,
-      content: "Bonjour ! 💕 Je suis Armony, votre conseillère en relations amoureuses développée par l'équipe de PEM (Rodrigue GBADOU, Loana LAMBERT, Louise MAKIALA MATOMA, Farah Mélissa AHMED, Inès DAOUDI, Aurélien YOMI).\n\nJe suis ici pour vous aider avec :\n• Conseils pour les premiers rendez-vous\n• Gestion des relations et communication\n• Surmonter les ruptures\n• Retrouver confiance en soi\n\nComment puis-je vous aider aujourd'hui ? 😊",
+      content: `Bonjour ! 💕 Je suis Armony, votre conseillère en relations amoureuses.\n\nJe suis actuellement propulsée par l'IA de **${aiProvider}** et j'ai été développée par l'équipe de PEM : Rodrigue GBADOU, Loana LAMBERT, Louise MAKIALA MATOMA, Farah Mélissa AHMED, Inès DAOUDI, et Aurélien YOMI.\n\nComment puis-je vous aider aujourd'hui ? 😊`,
       isUser: false,
       timestamp: new Date()
     }
@@ -45,14 +47,12 @@ const ChatContainer = () => {
       timestamp: new Date()
     }
 
-    setMessages(prev => [...prev, userMessage])
+    const updatedMessages = [...messages, userMessage]
+    setMessages(updatedMessages)
     setIsTyping(true)
 
     try {
-      // Simuler un délai de réponse réaliste
-      await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 2000))
-      
-      const botResponse = generateBotResponse(content)
+      const botResponse = await generateBotResponse(content, updatedMessages)
       const botMessage = {
         id: Date.now() + 1,
         content: botResponse,
